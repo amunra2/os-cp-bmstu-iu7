@@ -1,0 +1,1 @@
+cmd_/home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.o := ld -m elf_x86_64 -z noexecstack   -r -o /home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.o /home/amunra23/study/sem7/oscp/oscp_github/module/func.o /home/amunra23/study/sem7/oscp/oscp_github/module/mod_proc.o

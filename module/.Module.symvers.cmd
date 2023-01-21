@@ -1,0 +1,1 @@
+cmd_/home/amunra23/study/sem7/oscp/oscp_github/module/Module.symvers := sed 's/\.ko$$/\.o/' /home/amunra23/study/sem7/oscp/oscp_github/module/modules.order | scripts/mod/modpost -m -a  -o /home/amunra23/study/sem7/oscp/oscp_github/module/Module.symvers -e -i Module.symvers   -T -
