@@ -72,6 +72,34 @@ QString get_cpu_model() {
     return QString::fromStdString(str);
 }
 
+QString get_gpu_model() {
+    std::ifstream stream("/proc/driver/nvidia/gpus/0000:01:00.0/information");
+    std::string str;
+    for(int i = 0; i < 1; i++)
+        stream >> str;
+    getline(stream, str);
+    stream.close();
+
+    QString qtStr = QString::fromStdString(str).remove("\t");
+
+    if (qtStr == "")
+        qtStr = " Файл с информацией недоступен";
+    
+    return qtStr;
+}
+
+QString get_linux_version() {
+    std::ifstream stream("/proc/version");
+    std::string str;
+    for(int i = 0; i < 2; i++)
+        stream >> str;
+    getline(stream, str);
+    stream.close();
+
+    QString qtStr = QString::fromStdString(str).left(10);
+    return qtStr;
+}
+
 QString get_cpu_frequency() {
     std::ifstream stream("/proc/cpuinfo");
     std::string str;

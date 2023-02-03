@@ -17,6 +17,8 @@ QString get_hostname();
 QString get_user_name();
 QString get_uptime();
 QString get_cpu_model();
+QString get_gpu_model();
+QString get_linux_version();
 QString get_cpu_frequency();
 QString get_available_memory();
 QString get_busy_memory();

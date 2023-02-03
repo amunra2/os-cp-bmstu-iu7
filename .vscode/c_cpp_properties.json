@@ -16,7 +16,9 @@
                 "/usr/src/linux-headers-5.15.0-56-generic/arch/x86/include/generated/uapi",
                 "/usr/src/linux-headers-5.15.0-56-generic/include/uapi",
                 "/usr/src/linux-headers-5.15.0-56-generic/include/generated/uapi",
-                "/usr/src/linux-headers-5.15.0-56-generic/ubuntu/include"
+                "/usr/src/linux-headers-5.15.0-56-generic/ubuntu/include",
+
+                "/usr/include/x86_64-linux-gnu/qt5/QtCore/"
             ],
             "defines": [
                 "KBUILD_MODNAME=\"dummyname\"",

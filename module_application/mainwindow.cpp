@@ -24,15 +24,18 @@ MainWindow::MainWindow(QWidget *parent) :
 }
 
 void MainWindow::update_info() {
-    ui->host_name_label->setText("Имя компьютера: " + get_hostname());
-    ui->user_name_label->setText("Имя пользователя: " + get_user_name());
-    ui->uptime_label->setText("Время непрерывной работы: " + get_uptime());
-    ui->cpu_model_label->setText("Модель центрального процессора: " + get_cpu_model());
-    ui->cpu_frequency_label->setText("Частота центрального процессора: " + get_cpu_frequency() + " MHz");
+    ui->host_name_label->setText("Имя компьютера:\n " + get_hostname());
+    ui->user_name_label->setText("Имя пользователя:\n " + get_user_name());
+    ui->uptime_label->setText("Время непрерывной работы:\n " + get_uptime());
+    ui->cpu_model_label->setText("Модель центрального процессора:\n" + get_cpu_model());
+    ui->cpu_frequency_label->setText("Частота центрального процессора:\n" + get_cpu_frequency() + " MHz");
     ui->cpu_load_progressbar->setValue(get_cpu_load(cpu_stats_gap));
-    ui->total_memory_label->setText("Доступная оперативная память: " + get_available_memory());
-    ui->busy_memory_lable->setText("Используемая оперативная память: " + get_busy_memory());
+    ui->total_memory_label->setText("Доступная оперативная память:\n " + get_available_memory());
+    ui->busy_memory_lable->setText("Используемая оперативная память:\n" + get_busy_memory());
     ui->busy_memory_progressbar->setValue(get_memory_percentage());
+
+    ui->gpu_model_label->setText("Модель видеокарты:\n" + get_gpu_model());
+    ui->linux_version_label->setText("Версия операционной системы:\n" + get_linux_version());
 }
 
 MainWindow::~MainWindow()
