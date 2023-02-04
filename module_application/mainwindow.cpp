@@ -20,7 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
     QTimer *info_timer = new QTimer;
     connect(info_timer, SIGNAL(timeout()), this, SLOT(update_info()));
     info_timer->start(info_update_gap);
-
 }
 
 void MainWindow::update_info() {
@@ -33,7 +32,6 @@ void MainWindow::update_info() {
     ui->total_memory_label->setText("Доступная оперативная память:\n " + get_available_memory());
     ui->busy_memory_lable->setText("Используемая оперативная память:\n" + get_busy_memory());
     ui->busy_memory_progressbar->setValue(get_memory_percentage());
-
     ui->gpu_model_label->setText("Модель видеокарты:\n" + get_gpu_model());
     ui->linux_version_label->setText("Версия операционной системы:\n" + get_linux_version());
 }
@@ -48,6 +46,7 @@ int MainWindow::connect_module(const std::string& str_write, const std::string& 
 {
     std::ofstream fw;
     fw.open(filename);
+
     if(fw.is_open())
     {
         fw << str_write;
@@ -58,12 +57,12 @@ int MainWindow::connect_module(const std::string& str_write, const std::string& 
         return -1;
 
     std::ifstream fr(filename);
+
     if(fr.is_open())
     {
         std::string line;
         bool eof = fr.eof();
-        bool good = fr.good();
-        bool bad = fr.bad();
+
         if (eof) {
             answer.push_back("No such ID!");
             return 0;
@@ -74,12 +73,12 @@ int MainWindow::connect_module(const std::string& str_write, const std::string& 
            qDebug() << QString(line.data());
            answer.push_back(line);
         }
+
         fr.close();
         return 0;
     }
+
     return -1;
-
-
 }
 
 void MainWindow::on_btn_tree_clicked()
@@ -108,7 +107,6 @@ void MainWindow::on_btn_tree_clicked()
 
 void MainWindow::on_btn_files_clicked()
 {
-
     std::vector<std::string> answer;
     std::string filename("/proc/mod_proc_files");
     std::string str_write(std::to_string(ui->spb_files->value()));
