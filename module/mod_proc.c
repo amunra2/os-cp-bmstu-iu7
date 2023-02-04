@@ -16,10 +16,12 @@ static ssize_t write_proc_mem(struct file *filp,const char *buf,size_t count,lof
 static ssize_t read_proc_files(struct file *filp,char *buf,size_t count,loff_t *offp );
 static ssize_t write_proc_files(struct file *filp,const char *buf,size_t count,loff_t *offp);
 
+
 static ssize_t read_proc_tree(struct file *filp,char *buf,size_t count,loff_t *offp ) 
 {
 	char msg2[] = "Pass 'tree' to process-tree";
 	char *buf_msg = vmalloc(1000000 * sizeof(char));
+
 	if (strcmp(msg_tree, "tree") == 0)
 	{
 		struct task_struct *task;
@@ -33,28 +35,32 @@ static ssize_t read_proc_tree(struct file *filp,char *buf,size_t count,loff_t *o
 		buf_msg[strlen(msg2)] = '\0';
 	}
 	
-	
 	int res;
+
 	if( *offp >= strlen( buf_msg ) )
 	{    
 		*offp = 0;
 		return 0;
 	}
+
     if( count > strlen( buf_msg ) - *offp ) 
        count = strlen( buf_msg ) - *offp;
+
     res = copy_to_user( (void*)buf, buf_msg + *offp, count );
+
     *offp += count;
     return count;
-	
 }
 
 static ssize_t write_proc_tree(struct file *filp,const char *buf,size_t count,loff_t *offp)
 {	
 	ssize_t procfs_buf_size = count;
+
 	if (procfs_buf_size > MAX_WRITE_BUF_SIZE)
 	{
 		procfs_buf_size = MAX_WRITE_BUF_SIZE;
 	}
+
 	copy_from_user(msg_tree, buf, procfs_buf_size);
 
 	msg_tree[procfs_buf_size] = '\0'; 
@@ -67,6 +73,7 @@ static ssize_t read_proc_mem(struct file *filp,char *buf,size_t count,loff_t *of
 {
 	char msg2[] = "Pass id of process";
 	char *buf_msg = vmalloc(1000000 * sizeof(char));
+
 	if (is_number(msg_mem, strlen(msg_mem)))
 	{
 		int id = str_to_number(msg_mem, strlen(msg_mem));
@@ -79,15 +86,18 @@ static ssize_t read_proc_mem(struct file *filp,char *buf,size_t count,loff_t *of
 	}
 	
 	int res;
+
 	if( *offp >= strlen( buf_msg ) )
 	{    
 		*offp = 0;
 		return 0;
 	}
+
     if( count > strlen( buf_msg ) - *offp ) 
        count = strlen( buf_msg ) - *offp;
 
     res = copy_to_user( (void*)buf, buf_msg + *offp, count );
+
     *offp += count;
     return count;
 }
@@ -95,6 +105,7 @@ static ssize_t read_proc_mem(struct file *filp,char *buf,size_t count,loff_t *of
 static ssize_t write_proc_mem(struct file *filp,const char *buf,size_t count,loff_t *offp)
 {
 	ssize_t procfs_buf_size = count;
+
 	if (procfs_buf_size > MAX_WRITE_BUF_SIZE)
 	{
 		procfs_buf_size = MAX_WRITE_BUF_SIZE;
@@ -102,7 +113,7 @@ static ssize_t write_proc_mem(struct file *filp,const char *buf,size_t count,lof
 	
 	copy_from_user(msg_mem, buf, procfs_buf_size);
 
-	msg_mem[procfs_buf_size] = '\0'; 
+	msg_mem[procfs_buf_size] = '\0';
 	printk("Message to /proc/%s from user-space: %s\n", PROCFS_MEM_NAME, msg_mem);
 
 	return count;
@@ -112,6 +123,7 @@ static ssize_t read_proc_files(struct file *filp,char *buf,size_t count,loff_t *
 {
 	char msg2[] = "Pass id of process";
 	char *buf_msg = vmalloc(1000000 * sizeof(char));	
+
 	if (is_number(msg_files, strlen(msg_files)))
 	{
 		int id = str_to_number(msg_files, strlen(msg_files));
@@ -124,14 +136,18 @@ static ssize_t read_proc_files(struct file *filp,char *buf,size_t count,loff_t *
 	}
 	
 	int res;
+
 	if( *offp >= strlen( buf_msg ) )
 	{    
 		*offp = 0;
 		return 0;
 	}
+
     if( count > strlen( buf_msg ) - *offp ) 
        count = strlen( buf_msg ) - *offp;
+
     res = copy_to_user( (void*)buf, buf_msg + *offp, count );
+
     *offp += count;
     return count;
 }
@@ -139,6 +155,7 @@ static ssize_t read_proc_files(struct file *filp,char *buf,size_t count,loff_t *
 static ssize_t write_proc_files(struct file *filp,const char *buf,size_t count,loff_t *offp)
 {
 	ssize_t procfs_buf_size = count;
+
 	if (procfs_buf_size > MAX_WRITE_BUF_SIZE)
 	{
 		procfs_buf_size = MAX_WRITE_BUF_SIZE;
@@ -182,7 +199,8 @@ static int  __init proc_init( void )
 
 	msg_tree = kmalloc(MAX_WRITE_BUF_SIZE * sizeof(char), GFP_KERNEL);
 	msg_mem = kmalloc(MAX_WRITE_BUF_SIZE * sizeof(char), GFP_KERNEL);
-	msg_files = kmalloc(MAX_WRITE_BUF_SIZE * sizeof(char), GFP_KERNEL);	
+	msg_files = kmalloc(MAX_WRITE_BUF_SIZE * sizeof(char), GFP_KERNEL);
+
 	if (procfs_tree == NULL || procfs_mem == NULL || procfs_files == NULL) 
 	{
 		remove_proc_entry(PROCFS_TREE_NAME, NULL);
@@ -191,6 +209,7 @@ static int  __init proc_init( void )
 		printk("Error: Could not initialize files in /proc\n");
 		return -ENOMEM;
 	}
+	
 	return 0;
 }
 

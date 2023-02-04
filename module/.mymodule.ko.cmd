@@ -1,1 +1,0 @@
-cmd_/home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.ko /home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.o /home/amunra23/study/sem7/oscp/oscp_github/module/mymodule.mod.o;  true
