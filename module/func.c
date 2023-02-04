@@ -242,8 +242,8 @@ void process_info(struct task_struct* task, int n, char* buf, int* offset)
         count++;
     }
 
-    printk("Process: %s[%d] (parent: %s[%d])\n", task->comm, task->pid , task->parent->comm, task->parent->pid);
-    cnt = sprintf(str, "Process: %s[%d]   (parent: %s[%d])\n",
+    printk("process: %s[%d] (parent: %s[%d])\n", task->comm, task->pid , task->parent->comm, task->parent->pid);
+    cnt = sprintf(str, "process: %s[%d]   (parent: %s[%d])\n",
                  task->comm, task->pid , task->parent->comm, task->parent->pid);
 
     str[cnt] = '\0';
@@ -267,8 +267,8 @@ void process_info(struct task_struct* task, int n, char* buf, int* offset)
                 (*offset) += strlen("\t");
             }
 
-            printk("--- Child: %d, ", i);
-            cnt = sprintf(str, "--- Child: %d, ", i);
+            printk("--- CHILD: %d, ", i);
+            cnt = sprintf(str, "--- CHILD: %d, ", i);
 
             str[cnt] = '\0';
             memcpy(buf + (*offset), str, strlen(str));
