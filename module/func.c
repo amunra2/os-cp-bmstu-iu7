@@ -1,290 +1,290 @@
 #include "mod_proc.h"
 
-typedef struct PList
-{
-    struct task_struct* task;
-    struct PList* next;
-}PList;
 
 bool is_number(const char *str, int n)
 {
-	int i;	
-	for(i = 0; i < n; i++)
-		if (str[i] < '0' || str[i] > '9')
-			return false;
-	return true;
+    for (int i = 0; i < n; i++)
+        if (str[i] < '0' || str[i] > '9')
+            return false;
+
+    return true;
 }
+
 
 int str_to_number(const char *str, int n)
 {
-	int res = 0;
-	int i;
-	for(i = 0; i < n; i++)
-		res = res * 10 + ( str[i] - '0' );
-	return res;
+    int res = 0;
+
+    for(int i = 0; i < n; i++)
+        res = res * 10 + (str[i] - '0');
+
+    return res;
 }
+
+
+struct task_struct* get_task_by_id(int id)
+{
+    struct task_struct *task;
+    struct task_struct *current_task = NULL;
+
+    rcu_read_lock();
+
+    for_each_process(task)
+    {
+        task_lock(task);
+
+        if(task->pid == id)	
+            current_task = task;
+
+        task_unlock(task);   
+    }
+
+    rcu_read_unlock();
+
+    return current_task;
+}
+
 
 void mem_info(int id, char* buf)
 {
-	char *str = vmalloc(10000 * sizeof(char));
-	int offset = 0;
-	int cnt;
+    char *str = vmalloc(10000 * sizeof(char));
+    int offset = 0;
+    int cnt;
+    bool found = false;
 
-	bool found = false;
-	struct task_struct *task;
-	struct task_struct *t = current;
-	struct mm_struct *m;
-	struct vm_area_struct *v;
-	struct kstat *ks;
-	unsigned long t_size = 0;
+    struct task_struct *current_task = current;
+    struct vm_area_struct *v;
+    unsigned long t_size = 0;
 
-	rcu_read_lock();
+    struct task_struct *task = get_task_by_id(id);
 
-	for_each_process(task)
-	{
-		task_lock(task);
-		int iid = task -> pid;
-		if(iid == id)
-		{	
-			t = task;
-			found = true;
-		}
-		task_unlock(task);
-				
-	}
-	rcu_read_unlock();
+    if (task)
+    {
+        found = true;
+        current_task = task;
+    }
 
-	if(found && t ->  mm != NULL)
-	{
-		printk("//////VIRTUAL MEMORY INFORMATION//////\n\n");
-		v = t -> mm -> mmap;
+    if (found && current_task->mm != NULL)
+    {
+        printk("=====VIRTUAL MEMORY INFORMATION=====\n\n");
+        v = current_task->mm->mmap;
 
-		if(v != NULL)
-		{
-			printk("Process: %s[%d]\n",t -> comm, t -> pid);
-			cnt = sprintf(str, "Process: %s[%d]\n",t -> comm, t -> pid);
+        if(v != NULL)
+        {
+            printk("Process: %s[%d]\n", current_task->comm, current_task->pid);
+            cnt = sprintf(str, "Process: %s[%d]\n", current_task->comm, current_task->pid);
 
-			str[cnt] = '\0';
-			memcpy(buf + offset, str, strlen(str));
-			offset += strlen(str);
+            str[cnt] = '\0';
+            memcpy(buf + offset, str, strlen(str));
+            offset += strlen(str);
 
-			int is_full = 0;
+            int is_full = 0;
 
-			while(v -> vm_next != NULL)
-			{
-				unsigned long size = v -> vm_end - v -> vm_start;
-				if (size > 100000) {
-					printk("Full house\n");
-					is_full = 1;
-					break;
-				}
+            while(v->vm_next != NULL)
+            {
+                unsigned long size = v->vm_end - v->vm_start;
 
-				t_size = t_size + size;
+                if (size > 100000) 
+                {
+                    printk("Full house\n");
+                    is_full = 1;
+                    break;
+                }
 
-				printk("Start: 0x%lx, End: \t0x%lx \t(block Size: \t0x%lx)\n", v -> vm_start, v -> vm_end, size);
-				cnt = sprintf(str, "Start: \t0x%lx, \tEnd: \t0x%lx \t(block Size: \t0x%lx)\n", v -> vm_start, v -> vm_end, size);
-				
-				str[cnt] = '\0';
-				memcpy(buf + offset, str, strlen(str));
-				offset += strlen(str);
-				v = v -> vm_next;
-			}
+                t_size = t_size + size;
 
-			if (is_full) {
+                printk("Start: 0x%lx, End: \t0x%lx \t(block Size: \t0x%lx)\n", v->vm_start, v->vm_end, size);
+                cnt = sprintf(str, "Start: \t0x%lx, \tEnd: \t0x%lx \t(block Size: \t0x%lx)\n", v->vm_start, v->vm_end, size);
+                
+                str[cnt] = '\0';
+                memcpy(buf + offset, str, strlen(str));
+                offset += strlen(str);
+                v = v->vm_next;
+            }
 
-			} 
-			else {
-				printk("Total size of virtual space is: 0x%lx\n",t_size);
-				cnt = sprintf(str, "Total size of virtual space is: 0x%lx\n",t_size);
+            if (is_full) 
+            { } 
+            else 
+            {
+                printk("Total size of virtual space is: 0x%lx\n", t_size);
+                cnt = sprintf(str, "Total size of virtual space is: 0x%lx\n", t_size);
 
-				str[cnt] = '\0';
-				memcpy(buf + offset, str, strlen(str));
-				offset += strlen(str);
-			}
-		}
-	}
-	else if (t -> mm == NULL) 
-	{
-		printk("ID %d not found\n", id);
-		cnt = sprintf(str, "ID %d have no memory structure.\n", id);
+                str[cnt] = '\0';
+                memcpy(buf + offset, str, strlen(str));
+                offset += strlen(str);
+            }
+        }
+    }
+    else if (current_task->mm == NULL) 
+    {
+        printk("ID %d have no memory structure.\n", id);
+        cnt = sprintf(str, "ID %d have no memory structure.\n", id);
 
-		str[cnt] = '\0';
-		memcpy(buf + offset, str, strlen(str));
-		offset += strlen(str);
-	}
-	else
-	{
-		printk("ID %d not found\n", id);
-		cnt = sprintf(str, "ID %d not found\n", id);
+        str[cnt] = '\0';
+        memcpy(buf + offset, str, strlen(str));
+        offset += strlen(str);
+    }
+    else
+    {
+        printk("ID %d not found\n", id);
+        cnt = sprintf(str, "ID %d not found\n", id);
 
-		str[cnt] = '\0';
-		memcpy(buf + offset, str, strlen(str));
-		offset += strlen(str);
-	}
-	
-	buf[offset] = '\0';
-	vfree(str);
+        str[cnt] = '\0';
+        memcpy(buf + offset, str, strlen(str));
+        offset += strlen(str);
+    }
+    
+    buf[offset] = '\0';
+    vfree(str);
 }
 
 
 void files_info(int id, char* buf)
 {
-	char *str = vmalloc(1000 * sizeof(char));
-	int offset = 0;
-	int cnt;
+    char *str = vmalloc(1000 * sizeof(char));
+    int offset = 0;
+    int cnt;
 
-	bool found = false;
-	struct task_struct *task;
-	struct task_struct *t = current;
-	struct files_struct *open_files;
-	struct fdtable *files_table; 
-	struct path files_path;
+    bool found = false;
+    struct task_struct *current_task = current;
+    struct files_struct *open_files;
+    struct fdtable *files_table; 
+    struct path files_path;
 
-	rcu_read_lock();
+    struct task_struct *task = get_task_by_id(id);
 
-	for_each_process(task)
-	{
-		task_lock(task);
-		int iid = task -> pid;
+    if (task)
+    {
+        found = true;
+        current_task = task;
+    }
 
-		if(iid == id)
-		{	
-			t = task;
-			found = true;
-		}
+    if (found)
+    {
+        printk("=====OPEN FILES INFORMATION=====\n\n");
+        printk("Process: %20s[%4d]\n", current_task->comm, current_task->pid);
+        cnt = sprintf(str, "Process: %20s[%4d]\n", current_task->comm, current_task->pid);
 
-		task_unlock(task);
-	}
+        str[cnt] = '\0';
+        memcpy(buf + offset, str, strlen(str));
+        offset += strlen(str);
 
-	rcu_read_unlock();
+        int i = 0;
+        open_files = current_task->files;
+        files_table = files_fdtable(open_files);
+        char *path;
+        char *buf_tmp = (char*)kmalloc(10000 * sizeof(char), GFP_KERNEL);
 
-	if(found)
-	{
-		printk("//////OPEN FILES INFORMATION//////\n\n");
-		printk("Process: %20s[%4d]\n",t -> comm, t -> pid);
-		cnt = sprintf(str, "Process: %20s[%4d]\n",t -> comm, t -> pid);
+        while(files_table->fd[i] != NULL)
+        {
+            files_path = files_table->fd[i]->f_path;
+            char* name = files_table->fd[i]->f_path.dentry->d_iname;
+            long long size = i_size_read(files_table->fd[i]->f_path.dentry->d_inode);
+            path = d_path(&files_path, buf_tmp, 10000 * sizeof(char));
 
-		str[cnt] = '\0';
-		memcpy(buf + offset, str, strlen(str));
-		offset += strlen(str);
+            printk("Name: \t%s, \tFD: \t%d, \tSize: \t0x%llx bytes \t(path: \t%s)\n", name, i, size , path);
+            cnt = sprintf(str, "Name: \t%s, \tFD: \t%d, \tSize: \t0x%llx bytes \t(path: \t%s)\n", name, i, size , path);
 
-		int i = 0;
-		open_files = t -> files;
-		files_table = files_fdtable(open_files);
-		char *path;
-		char *buf_tmp = (char*)kmalloc(10000 * sizeof(char), GFP_KERNEL);
+            str[cnt] = '\0';
+            memcpy(buf + offset, str, strlen(str));
+            offset += strlen(str);
+            i++;
+        }
 
-		while(files_table -> fd[i] != NULL)
-		{
-			files_path = files_table -> fd[i] -> f_path;
-			char* name = files_table-> fd[i] -> f_path.dentry -> d_iname;
-			long long size = i_size_read(files_table-> fd[i] -> f_path.dentry -> d_inode);
-			path = d_path(&files_path, buf_tmp, 10000 * sizeof(char));
+        if (i == 0) {
+            printk("Process hasn't opened files");
+            cnt = sprintf(str, "Process hasn't opened files.");
 
-			printk("Name: \t%s, \tFD: \t%d, \tSize: \t0x%llx bytes \t(path: \t%s)\n", name, i, size , path);
-			cnt = sprintf(str, "Name: \t%s, \tFD: \t%d, \tSize: \t0x%llx bytes \t(path: \t%s)\n", name, i, size , path);
+            str[cnt] = '\0';
+            memcpy(buf + offset, str, strlen(str));
+            offset += strlen(str);
+        }
+        kfree(buf_tmp);
+    }
+    else
+    {
+        printk("ID %d not found\n", id);
+        cnt = sprintf(str, "ID %d not found\n", id);
 
-			str[cnt] = '\0';
-			memcpy(buf + offset, str, strlen(str));
-			offset += strlen(str);
-			i++;
-		}
-
-		if (i == 0) {
-			cnt = sprintf(str, "Process hasn't opened files.");
-
-			str[cnt] = '\0';
-			memcpy(buf + offset, str, strlen(str));
-			offset += strlen(str);
-		}
-
-		kfree(buf_tmp);
-	}
-	else
-	{
-		printk("ID %d not found\n", id);
-		cnt = sprintf(str, "ID %d not found\n", id);
-
-		str[cnt] = '\0';
-		memcpy(buf + offset, str, strlen(str));
-		offset += strlen(str);
-	}
-	
-	buf[offset] = '\0';
-	vfree(str);
-
+        str[cnt] = '\0';
+        memcpy(buf + offset, str, strlen(str));
+        offset += strlen(str);
+    }
+    
+    buf[offset] = '\0';
+    vfree(str);
 }
 
 void process_info(struct task_struct* task, int n, char* buf, int* offset)
 {
-	char *str = vmalloc(1000 * sizeof(char));
-	int cnt;
+    char *str = vmalloc(1000 * sizeof(char));
+    int cnt;
     
-	int count = 0;
-    struct PList* head = kmalloc(sizeof(PList), GFP_KERNEL);
-    head -> task = NULL;
-    head -> next = NULL;
-    struct PList* cur = head;
+    int count = 0;
+    struct Node* head = kmalloc(sizeof(Node), GFP_KERNEL);
+    head->task = NULL;
+    head->next = NULL;
+    struct Node* cur = head;
     struct list_head* pos;
 
     list_for_each(pos, &task->children)
     {
-        if (head -> task == NULL)
-            head -> task = list_entry(pos, struct task_struct, sibling);
+        if (head->task == NULL)
+            head->task = list_entry(pos, struct task_struct, sibling);
         else
         {
-            cur -> next = kmalloc(sizeof(PList),GFP_KERNEL);
-            cur -> next -> task = list_entry(pos, struct task_struct, sibling);
-            cur -> next -> next = NULL;
-            cur = cur -> next;
+            cur->next = kmalloc(sizeof(Node),GFP_KERNEL);
+            cur->next->task = list_entry(pos, struct task_struct, sibling);
+            cur->next->next = NULL;
+            cur = cur->next;
         }
+
         count++;
     }
-    printk("Process: %s[%d] (parent: %s[%d])\n", task -> comm, task -> pid , task -> parent -> comm, task -> parent -> pid);
-	cnt = sprintf(str, "Process: %s[%d]   (parent: %s[%d])\n",
-				 task -> comm, task -> pid , task -> parent -> comm, task -> parent -> pid);
 
-	str[cnt] = '\0';
-	memcpy(buf + (*offset), str, strlen(str));
-	(*offset) += strlen(str);
+    printk("Process: %s[%d] (parent: %s[%d])\n", task->comm, task->pid , task->parent->comm, task->parent->pid);
+    cnt = sprintf(str, "Process: %s[%d]   (parent: %s[%d])\n",
+                 task->comm, task->pid , task->parent->comm, task->parent->pid);
+
+    str[cnt] = '\0';
+    memcpy(buf + (*offset), str, strlen(str));
+    (*offset) += strlen(str);
 
     if(count > 0)
     {
-        struct PList* pr;
+        struct Node* pr;
         n = n - 1;
         int i = 1;
-
-        if(n > 0)
-
-		for(pr = head; pr != NULL;)
+        
+        for(pr = head; pr != NULL;)
         {
-        	int m = DEPTH;
+            int m = DEPTH;
 
             for(; m > n; m--)
             {
-            	printk("\t");
-				memcpy(buf + (*offset), "\t", strlen("\t"));
-				(*offset) += strlen("\t");
+                printk("\t");
+                memcpy(buf + (*offset), "\t", strlen("\t"));
+                (*offset) += strlen("\t");
             }
 
             printk("--- Child: %d, ", i);
-			cnt = sprintf(str, "--- Child: %d, ", i);
+            cnt = sprintf(str, "--- Child: %d, ", i);
 
-			str[cnt] = '\0';
-			memcpy(buf + (*offset), str, strlen(str));
-			(*offset) += strlen(str);
+            str[cnt] = '\0';
+            memcpy(buf + (*offset), str, strlen(str));
+            (*offset) += strlen(str);
 
-            process_info(pr -> task, n, buf, offset);
+            process_info(pr->task, n, buf, offset);
 
             i = i+1;
-            struct PList* temp = pr;
-            pr = pr -> next;
+            struct Node* temp = pr;
+            pr = pr->next;
 
             kfree(temp);
             temp = NULL;
         }
     }
-	
-	buf[*offset] = '\0';
-	vfree(str);
+    
+    buf[*offset] = '\0';
+    vfree(str);
 }

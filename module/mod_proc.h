@@ -20,3 +20,9 @@ int str_to_number(const char *str, int n);
 void mem_info(int id, char* buf);
 void files_info(int id, char* buf);
 void process_info(struct task_struct* task, int n, char* buf, int* offset);
+
+typedef struct Node
+{
+    struct task_struct* task;
+    struct Node* next;
+} Node;
